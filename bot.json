@@ -1,0 +1,65 @@
+{
+  "id": "81a70b7b-4dc8-4ac9-ab0d-74aba753f5bc",
+  "name": "Webinar_cust_sat",
+  "description": null,
+  "default_flow": "Default",
+  "flows": [
+    {
+      "name": "Default",
+      "description": "Default custom flow",
+      "commands": []
+    }
+  ],
+  "files": [
+    {
+      "name": "shirt.jpg",
+      "description": null
+    }
+  ],
+  "functions": [],
+  "apps": [
+    {
+      "name": "airtable",
+      "description": "Create records, and query your existing ones on Airtable",
+      "args": [
+        "method=\"getRecords\"",
+        "url=\"https://api.airtable.com/v0/id/myTable\""
+      ],
+      "runtime": "nodejs12.x",
+      "handler": "index.handler",
+      "environment": {
+        "API_KEY": ""
+      },
+      "app_id": "3eb4b835-d392-4575-8bfb-a5a1b683fd5c",
+      "version": "1.0.0"
+    },
+    {
+      "name": "gorgias",
+      "description": "This library allows you to classify text for sentiment analysis purpose and perform question answering",
+      "args": [
+        "method=\"createTicket\"",
+        "ticket="
+      ],
+      "runtime": "nodejs12.x",
+      "handler": "index.handler",
+      "environment": {
+        "EMAIL": "",
+        "API_KEY": "",
+        "API_URL": ""
+      },
+      "app_id": "c3c19917-3acf-494e-899c-7039b122716f",
+      "version": "1.0.1"
+    },
+    {
+      "name": "huggingface",
+      "description": "This library allows you to classify text for sentiment analysis purpose and perform question answering",
+      "args": [
+        "method=\"sentimentAnalysis | questionAnswering\""
+      ],
+      "runtime": "nodejs12.x",
+      "handler": "index.handler",
+      "app_id": "2ae7d6de-c086-11ea-b3de-0242ac130004",
+      "version": "1.0.0"
+    }
+  ]
+}

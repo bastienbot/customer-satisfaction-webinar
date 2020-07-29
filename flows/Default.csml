@@ -1,0 +1,109 @@
+start:
+  say "Hi"
+  goto canGoForward
+
+// This is a step, the chatbot can move from one step to an other
+canGoForward:
+  // Here we ask a question with the Question() component
+  say Question(
+    "Can I ask you a few questions about your purchase ?",
+    buttons=[
+      // We tell CSML to remember the button below with the "as" keyword
+      Button("Yes sure 😇", accepts=["yes", "sure"]) as btnYes,
+      Button("No thanks 😉") as btnNo
+    ]
+  )
+  // CSML will hold until the user answers
+  hold
+  // A bit of logic here, the match keyword will check for equality
+  if (event match btnYes) {
+    say "Alright let's start!"
+    goto delivery
+  } else {
+    say "Ok 🤐"
+    goto end
+  }
+
+// Let's code !
+// 1 - We check if Mark has received his shirt
+delivery:
+  say Question("You ordered your shirt 16 days ago, have you received it yet ?",
+  buttons=[
+    Button("Yes I did") as btnYes,
+    Button("Nope 🤔") as btnNo,
+  ])
+  hold
+  if (event match btnYes) {
+    say "Great! The delivery company is awesome!"
+    goto openFeedback
+  } else {
+    say "Awww that's really weird, you should have received by now 😔"
+    goto createTicket
+  }
+
+// 2 - If he hasn't, we open a ticket on Gorgias to notify the Customer Service
+createTicket:
+  do ticket = {
+    "subject": "Late delivery",
+    "messages": [
+      {
+        "body_text": "Hello, I'm the customer sat chatbot, Mark delivery has not arrived",
+        "sender": {
+        "name": "Mark",
+        "email": "mark@myawesomecompany.com",
+        }
+      }
+    ]
+  }
+  do newTicket = Fn("gorgias", method="createTicket", ticket=ticket)
+  say "I created a ticket for you, here is the ticket number {{newTicket.response.ticket_id}}"
+  goto end
+
+// 3 - We get an open feedback using sentiment analysis
+openFeedback:
+  say "How do you like your shirt, I'm curious!"
+  hold
+  do sentimentAnalysis = Fn("huggingface", method="sentimentAnalysis", text=event)
+  remember openFeedback = event
+  remember feedbackRating = sentimentAnalysis.response.label
+  if (feedbackRating < 3) {
+    say "Arghh I am sorry to hear that, here is a discount because we want you to be happy: MYDISCOUNT1234"
+  } else if (feedbackRating > 3) {
+    say "Awesome"
+  } else {
+    say "Ok!"
+  }
+  goto uploadPhoto
+
+// 4 - We ask the user to upload of photo of himself with the shirt
+uploadPhoto:
+  if (feedbackRating < 3) {
+    say "I know you didn't like it but can you show me how it looks on you, I'll tell what I think"
+  } else {
+    say "Can you send a picture of you with the shirt so me and other can see how cool it is! 😍"
+  }
+  hold
+  remember photo = event
+  say "Aw it's really cool! It looks nice on you 🔥."
+  goto video
+
+// 5 - We show a video to the user (How to iron a shirt for instance)
+video:
+  say Typing(5000)
+  say "Here is a video you can watch if you ever want to know how to perfectly iron a shirt 👔"
+  say Video("https://www.youtube.com/watch?v=l7DqqQXwX0w")
+  goto save
+
+// 6 - We save everything to Airtable
+save:
+  if (_metadata.email) do email = _metadata.email
+  else do email = "mark@mycompany.com"
+  do fields = {
+    "email": email,
+    "delivered": "yes",
+    "openFeedback": openFeedback,
+    "openFeedbackAnalysis": feedbackRating,
+    "photo": photo 
+  }
+  do newRecord = Fn("airtable", method="createRecord", spreadsheet_id="appqwrtyuiop", table_name="feedbacks", fields=fields)
+  goto end
